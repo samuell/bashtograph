@@ -1,6 +1,7 @@
 from sys import argv
 import re
 
+
 def main():
     with open(argv[1]) as infile:
         commands = []
@@ -8,17 +9,20 @@ def main():
         append = False
         for line in infile:
             line = line.strip("\n")
-            if append and line and line[0] not in ["#"]:
-                command += "\n" + line
-            if not append and line and line[0] not in ["#"]:
-                commands.append(command)
-                command = line
+            if line and line[0] != "#":
+                if append:
+                    command += "\n" + line
+                else:
+                    commands.append(command)
+                    command = line
 
             if line and line[-1] == "\\":
                 append = True
             else:
                 append = False
 
+    dot = ["DIGRAPH {\n"]
+    dot.append("RANKDIR=LR;\n")
     for i, command in enumerate(commands):
         end = ""
         if line:
@@ -28,8 +32,17 @@ def main():
 
         inputs = re.findall("i:([^\ ]+)", command)
         outputs = re.findall("o:([^\ ]+)", command)
-        import ipdb; ipdb.set_trace()
-        pass
+
+        for inp in inputs:
+            dot.append(f'"{inp}" -> "{command}";\n\n')
+        for outp in outputs:
+            dot.append(f'"{command}" -> "{outp}";\n\n')
+
+    dot.append("}\n")
+
+    with open(f"{argv[1]}.dot", "w") as dotfile:
+        for line in dot:
+            dotfile.write(line)
 
 
 if __name__ == "__main__":
